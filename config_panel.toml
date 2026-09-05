@@ -52,7 +52,7 @@ services = []
         pattern.error = "Must be a valid npub1... key or a 64-character hex pubkey"
 
         [identities.link.do_link]
-        ask.en = "DEBUG MARKER Link identity"
+        ask.en = "Link identity"
         ask.fr = "Lier l'identité"
         type = "button"
         style = "success"
