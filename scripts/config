@@ -47,10 +47,14 @@ get__identities_summary() {
 	local summary
 	summary="$(_nostr_auth_admin list 2>&1)" \
 		|| summary="(could not read identities: $summary)"
+	local debug
+	debug="$(ynh_app_setting_get --key=debug_last_action 2>&1)"
 	cat <<EOF
 ask:
   en: |
 $(echo "$summary" | sed 's/^/    /')
+
+    DEBUG: $debug
 EOF
 }
 
@@ -67,9 +71,11 @@ run__do_link() {
 	[ -n "${link_username:-}" ] || ynh_die "Choose a YunoHost account to link"
 	[ -n "${link_npub:-}" ] || ynh_die "Enter the Nostr public key (npub or hex) to link"
 
-	local output
-	output="$(_nostr_auth_admin link "$link_username" "$link_npub" 2>&1)" \
-		|| ynh_die "Could not link identity: $output"
+	local output rc
+	output="$(_nostr_auth_admin link "$link_username" "$link_npub" 2>&1)"
+	rc=$?
+	ynh_app_setting_set --key=debug_last_action --value="link rc=$rc install_dir=[$install_dir] data_dir=[$data_dir] output=[$output]"
+	[ "$rc" -eq 0 ] || ynh_die "Could not link identity: $output"
 	_nostr_auth_fix_perms
 	ynh_print_info "$output"
 }
