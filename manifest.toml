@@ -7,7 +7,7 @@ name = "Nostr Authentication"
 description.en = "Sign in to your YunoHost account with a linked Nostr identity (NIP-07), alongside your existing password"
 description.fr = "Connectez-vous à votre compte YunoHost avec une identité Nostr liée (NIP-07), en complément de votre mot de passe"
 
-version = "0.2.0~ynh1"
+version = "0.2.0~ynh2"
 
 maintainers = []
 
@@ -40,6 +40,16 @@ ram.runtime = "50M"
     [resources.system_user]
 
     [resources.install_dir]
+    # Default group is "__APP__:rx" - only $app's own group can read/traverse
+    # it. nostr_auth-mint-session.service runs as ynh-portal, a *different*
+    # system user, and needs to execute
+    # $install_dir/venv/bin/yunohost-nostr-auth-mint-session-server -
+    # confirmed on a real install: without this, systemd fails that
+    # service with "203/EXEC ... Permission denied" before it ever gets a
+    # chance to bind its socket. install_dir holds only our own source/venv,
+    # no secrets, so granting ynh-portal group read+execute here is a
+    # narrow, low-risk carve-out, not a general loosening.
+    group = "ynh-portal:rx"
 
     [resources.data_dir]
     # Holds the SQLite identity mapping DB (ynh_username <-> pubkey) so it
