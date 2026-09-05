@@ -1,0 +1,25 @@
+#!/bin/bash
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+#=================================================
+# SYSTEM CONFIGURATION
+#=================================================
+ynh_script_progression "Updating nginx web server configuration..."
+
+ynh_config_change_url_nginx
+
+#=================================================
+# GENERIC FINALISATION
+#=================================================
+ynh_script_progression "Restarting $app's systemd service..."
+
+ynh_systemctl --service="$app" --action="restart" \
+	--log_path="systemd" \
+	--wait_until="Uvicorn running on"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+ynh_script_progression "Change of URL completed for $app"

@@ -1,0 +1,35 @@
+[Unit]
+Description=Nostr Authentication: sign in to YunoHost with a linked Nostr identity
+After=network.target
+
+[Service]
+Type=simple
+User=__APP__
+Group=__APP__
+
+# Unlike yunohost-mcp, this service does not need to run as root: it only
+# needs to look up existing YunoHost users and establish sessions for them
+# (PLAN.md's ynh/permissions.py), not drive systemctl/apt/LDAP admin
+# operations. That narrower requirement is exactly why PLAN.md's Phase 1
+# investigation into YunoHost's session-creation internals matters - it
+# determines what privilege this service actually needs.
+WorkingDirectory=__INSTALL_DIR__/
+Environment=PATH=__INSTALL_DIR__/venv/bin:/usr/bin:/bin
+Environment=NOSTR_AUTH_DATA_DIR=__DATA_DIR__
+ExecStart=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth --host 127.0.0.1 --port __PORT__
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallFilter=~@clock @debug @module @mount @obsolete @reboot @swap
+ReadWritePaths=__DATA_DIR__
+
+[Install]
+WantedBy=multi-user.target

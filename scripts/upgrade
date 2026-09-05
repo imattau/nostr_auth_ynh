@@ -1,0 +1,41 @@
+#!/bin/bash
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+#=================================================
+# DOWNLOAD, CHECK AND UNPACK SOURCE
+#=================================================
+ynh_script_progression "Upgrading source files..."
+
+ynh_setup_source --dest_dir="$install_dir" --full_replace
+
+#=================================================
+# REINSTALL PYTHON VIRTUAL ENVIRONMENT
+#=================================================
+ynh_script_progression "Upgrading the Python virtual environment..."
+
+nostr_auth_install_venv
+
+#=================================================
+# SYSTEM CONFIGURATION
+#=================================================
+ynh_script_progression "Upgrading system configurations related to $app..."
+
+ynh_config_add_nginx
+
+ynh_config_add_systemd
+
+#=================================================
+# START APP
+#=================================================
+ynh_script_progression "Starting $app's systemd service..."
+
+ynh_systemctl --service="$app" --action="restart" \
+	--log_path="systemd" \
+	--wait_until="Uvicorn running on"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+ynh_script_progression "Upgrade of $app completed"

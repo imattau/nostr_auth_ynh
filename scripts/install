@@ -1,0 +1,44 @@
+#!/bin/bash
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+#=================================================
+# DOWNLOAD, CHECK AND UNPACK SOURCE
+#=================================================
+ynh_script_progression "Setting up source files..."
+
+ynh_setup_source --dest_dir="$install_dir"
+
+#=================================================
+# INSTALL PYTHON VIRTUAL ENVIRONMENT
+#=================================================
+ynh_script_progression "Setting up the Python virtual environment..."
+
+nostr_auth_install_venv
+
+#=================================================
+# SYSTEM CONFIGURATION
+#=================================================
+ynh_script_progression "Adding system configurations related to $app..."
+
+ynh_config_add_nginx
+
+ynh_config_add_systemd
+
+yunohost service add "$app" --description="Nostr authentication add-on for YunoHost"
+
+#=================================================
+# START APP
+#=================================================
+ynh_script_progression "Starting $app's systemd service..."
+
+ynh_systemctl --service="$app" --action="start" \
+	--log_path="systemd" \
+	--wait_until="Uvicorn running on"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+ynh_script_progression "Installation of $app completed"
+ynh_print_info "Visit https://$domain/nostr-login once you've linked a Nostr identity - see doc/ADMIN.md"
