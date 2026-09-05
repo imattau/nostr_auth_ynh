@@ -23,6 +23,19 @@ header, the `sudo` dead end itself, and `install_dir`'s default
 permissions blocking the `ynh-portal` service from even starting - each
 fixed and re-verified live, not just reasoned about from source.
 
+Phase 9 (a "Sign in with Nostr" link on the *stock* YunoHost login page, not
+just the standalone `/nostr-login`) is also implemented: since the portal is
+a compiled Nuxt SPA with no supported JS extension point (only a CSS one),
+this works by directly injecting a small inline script into YunoHost's
+shared `index.html`, gated by hostname so it only activates on this app's
+own installed domain even though the underlying file is shared across every
+domain on the server. A cron job self-heals the injection, since no core
+hook fires after a `yunohost`/`yunohost-portal` package upgrade that would
+let us reapply it the clean way. See `conf/reapply-portal-patch.sh` for the
+full reasoning, and `nostr_auth_install_portal_patch`/
+`nostr_auth_remove_portal_patch` in `scripts/_common.sh` for how it's
+wired into install/upgrade/restore/remove.
+
 ## Layout
 
 ```text
@@ -34,6 +47,8 @@ conf/
     systemd.service                   # the main, unprivileged daemon ($app user)
     nostr_auth-mint-session.service   # the privileged session-minting helper (ynh-portal user) -
                                        # the main daemon talks to it over a Unix socket, never sudo
+    reapply-portal-patch.sh           # injects/self-heals the portal login-button (Phase 9)
+    cron                              # runs the above every 30 minutes
 doc/
     DESCRIPTION.md
     PRE_INSTALL.md

@@ -4,6 +4,13 @@ source _common.sh
 source /usr/share/yunohost/helpers
 
 #=================================================
+# REMOVE PORTAL LOGIN BUTTON
+#=================================================
+ynh_script_progression "Removing the Nostr login link from the YunoHost portal..."
+
+nostr_auth_remove_portal_patch
+
+#=================================================
 # REMOVE SYSTEMD SERVICES
 #=================================================
 ynh_script_progression "Stopping and removing the systemd services..."

@@ -47,6 +47,13 @@ ynh_systemctl --service="$app" --action="start" \
 	--wait_until="Uvicorn running on"
 
 #=================================================
+# PORTAL LOGIN BUTTON
+#=================================================
+ynh_script_progression "Restoring the Nostr login link on the YunoHost portal..."
+
+nostr_auth_install_portal_patch
+
+#=================================================
 # END OF SCRIPT
 #=================================================
 ynh_script_progression "Restoration of $app completed"

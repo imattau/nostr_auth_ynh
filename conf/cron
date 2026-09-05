@@ -1,0 +1,7 @@
+# Self-heals the portal login-button injection - see
+# reapply-portal-patch.sh for why this exists (no core hook fires after a
+# yunohost/yunohost-portal package upgrade that would let us reapply it
+# the clean way). Failures here are silent by design: this is a low-stakes
+# periodic check, not something that should page anyone or need a log
+# directory of its own.
+*/30 * * * * root __INSTALL_DIR__/reapply-portal-patch.sh > /dev/null 2>&1
