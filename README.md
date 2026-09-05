@@ -24,12 +24,17 @@ permissions blocking the `ynh-portal` service from even starting - each
 fixed and re-verified live, not just reasoned about from source.
 
 Phase 9 (a "Sign in with Nostr" link on the *stock* YunoHost login page, not
-just the standalone `/nostr-login`) is also implemented: since the portal is
-a compiled Nuxt SPA with no supported JS extension point (only a CSS one),
-this works by directly injecting a small inline script into YunoHost's
-shared `index.html`, gated by hostname so it only activates on this app's
-own installed domain even though the underlying file is shared across every
-domain on the server. A cron job self-heals the injection, since no core
+just the standalone `/nostr-login`) is also implemented and verified live:
+since the portal is a compiled Nuxt SPA with no supported JS extension
+point (only a CSS one), this works by directly injecting a small inline
+script into YunoHost's shared `index.html`, gated by hostname so it only
+activates on this app's own installed domain even though the underlying
+file is shared across every domain on the server. Confirmed on a real
+install: the button appeared on the real login page for the app's own
+domain (clicking it correctly reached `/nostr-login`, no console errors),
+the main domain's login page was pixel-for-pixel unaffected, and removing
+the app restored the shared `index.html` to be byte-for-byte identical to
+its pre-patch original. A cron job self-heals the injection, since no core
 hook fires after a `yunohost`/`yunohost-portal` package upgrade that would
 let us reapply it the clean way. See `conf/reapply-portal-patch.sh` for the
 full reasoning, and `nostr_auth_install_portal_patch`/
