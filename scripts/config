@@ -47,6 +47,12 @@ get__identities_summary() {
 	local summary
 	summary="$(_nostr_auth_admin list 2>&1)" \
 		|| summary="(could not read identities: $summary)"
+
+	local selftest_val="SELFTEST-$(date +%s)"
+	ynh_app_setting_set --key=debug_selftest --value="$selftest_val"
+	local selftest_readback
+	selftest_readback="$(ynh_app_setting_get --key=debug_selftest 2>&1)"
+
 	local debug_b64 debug
 	debug_b64="$(ynh_app_setting_get --key=debug_last_action 2>&1)"
 	debug="$(printf '%s' "$debug_b64" | base64 -d 2>&1)"
@@ -55,6 +61,7 @@ ask:
   en: |
 $(echo "$summary" | sed 's/^/    /')
 
+    SELFTEST wrote=[$selftest_val] read_back=[$selftest_readback]
     DEBUG: $(echo "$debug" | sed 's/^/    /')
 EOF
 }
