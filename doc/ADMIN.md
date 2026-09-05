@@ -40,6 +40,13 @@ client - or another app - can verify it. This is opt-in by virtue of
 having linked an identity at all, and only ever resolves one exact
 username at a time; it never lists every linked user.
 
+## Brute-force protection
+
+Failed login/link/unlink attempts are logged (with the requesting IP) to
+`/var/log/nostr_auth/nostr_auth.log`, watched by a fail2ban jail installed
+alongside the app - repeated failures from the same IP get banned the
+same way YunoHost's own portal login does.
+
 ## Recovery
 
 If you lose access to your linked Nostr key, password login still works:

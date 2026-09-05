@@ -27,6 +27,12 @@ ynh_config_add_nginx
 ynh_config_add_systemd --service="$app-mint-session" --template="nostr_auth-mint-session.service"
 ynh_config_add_systemd
 
+# PLAN.md Phase 13: "rate limiting, brute-force throttling" - see
+# scripts/install for what this watches and why.
+ynh_config_add_fail2ban \
+	--logpath="/var/log/$app/$app.log" \
+	--failregex="^.*(nostr login failure|identity link failure|identity unlink failure) from <HOST>:.*$"
+
 yunohost service add "$app-mint-session" --description="Nostr authentication: privileged session-minting helper" 2>/dev/null || true
 
 #=================================================

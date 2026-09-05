@@ -33,6 +33,14 @@ Environment=NOSTR_AUTH_PORTAL_API_BASE_URL=http://127.0.0.1:6788
 # has no legitimate reason to ever escalate privilege, unlike the old
 # sudo-based design.
 Environment=NOSTR_AUTH_MINT_SESSION_SOCKET=/run/nostr_auth-mint/__APP__.sock
+# PLAN.md Phase 13: "rate limiting, brute-force throttling." LogsDirectory=
+# creates/owns /var/log/__APP__ for us (and, unlike a plain path, is one of
+# the directives systemd auto-carves an exception for under
+# ProtectSystem=strict, same as ReadWritePaths below) - server.py writes
+# failed-login/-link/-unlink lines there, and ynh_config_add_fail2ban
+# (scripts/install) watches that file for them.
+LogsDirectory=__APP__
+Environment=NOSTR_AUTH_SECURITY_LOG_PATH=/var/log/__APP__/__APP__.log
 ExecStart=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth --host 127.0.0.1 --port __PORT__
 Restart=always
 RestartSec=5

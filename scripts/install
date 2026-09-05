@@ -27,6 +27,14 @@ ynh_config_add_nginx
 ynh_config_add_systemd --service="$app-mint-session" --template="nostr_auth-mint-session.service"
 ynh_config_add_systemd
 
+# PLAN.md Phase 13: "rate limiting, brute-force throttling." server.py
+# logs each failed login/link/unlink attempt (with the real client IP -
+# see its _client_ip) to the file below, via
+# NOSTR_AUTH_SECURITY_LOG_PATH in conf/systemd.service's LogsDirectory=.
+ynh_config_add_fail2ban \
+	--logpath="/var/log/$app/$app.log" \
+	--failregex="^.*(nostr login failure|identity link failure|identity unlink failure) from <HOST>:.*$"
+
 yunohost service add "$app-mint-session" --description="Nostr authentication: privileged session-minting helper"
 yunohost service add "$app" --description="Nostr authentication add-on for YunoHost"
 
