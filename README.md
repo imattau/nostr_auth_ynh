@@ -10,16 +10,18 @@ its full architecture/roadmap live in the core repo, in `PLAN.md`.
 
 ## Status
 
-Verified against a real YunoHost 12 test install: the login and account-
-linking HTTP flow works end-to-end (real password login, our own
-`/link/challenge` → sign → `/link`). Installs two systemd services (see
+Verified end-to-end against a real YunoHost 12 test install: real password
+login → our `/link/challenge` → sign → `/link` → `200`, then `/challenge`
+→ sign → `/authenticate` → `200` with a real, checked
+`Set-Cookie: yunohost.portal=...`. Installs two systemd services (see
 Layout below) - the split exists because minting a session needs the
 `ynh-portal` system user's privileges, and a `sudo`-based helper doesn't
-work on a containerized install (see the core repo's
-`PHASE0_INVESTIGATION.md`, "Privilege-drop redesign"). `/authenticate`
-against the current (socket-based) design is implemented and unit-tested
-upstream but its live re-verification here was cut short by an unrelated
-connection outage - see the core repo's open items.
+work on this install at all (see the core repo's `PHASE0_INVESTIGATION.md`,
+"Privilege-drop redesign"). Getting here took four real, live-only bugs
+(also in that doc) - a systemd `ProtectHome` interaction, a missing `Host`
+header, the `sudo` dead end itself, and `install_dir`'s default
+permissions blocking the `ynh-portal` service from even starting - each
+fixed and re-verified live, not just reasoned about from source.
 
 ## Layout
 
