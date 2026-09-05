@@ -7,6 +7,13 @@ Type=simple
 User=__APP__
 Group=__APP__
 SupplementaryGroups=nostr-auth-lookup
+# MappingStore reads identities.db from settings.data_dir, which defaults
+# to a relative "./data" (config.py) if this isn't set - fatal under
+# ProtectSystem=strict with no WorkingDirectory= (cwd is "/", read-only).
+# Confirmed live: without this, the service crash-loops on
+# "OSError: [Errno 30] Read-only file system: 'data'". Same variable as
+# __APP__.service's own Environment=NOSTR_AUTH_DATA_DIR=__DATA_DIR__.
+Environment=NOSTR_AUTH_DATA_DIR=__DATA_DIR__
 RuntimeDirectory=nostr_auth-lookup
 # 0755, not something narrower: this directory is owned by __APP__:__APP__
 # (systemd's RuntimeDirectory= always uses the unit's own User=/Group=),
@@ -28,7 +35,13 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 LockPersonality=yes
 SystemCallFilter=~@clock @debug @module @mount @obsolete @reboot @swap
-ReadWritePaths=/run/nostr_auth-lookup
+# MappingStore's __init__ always calls data_dir.mkdir(parents=True,
+# exist_ok=True) before it opens identities.db, even though this
+# service's own code path (get_by_pubkey) is read-only - that mkdir call
+# needs __DATA_DIR__ itself to be writable, not just readable, or it
+# fails the same way as the missing env var above. This grants nothing
+# beyond what __APP__.service already has on the same directory it owns.
+ReadWritePaths=/run/nostr_auth-lookup __DATA_DIR__
 
 [Install]
 WantedBy=multi-user.target
