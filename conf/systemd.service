@@ -33,9 +33,14 @@ ExecStart=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth --host 127.0.0.1 --port _
 Restart=always
 RestartSec=5
 
+# ProtectHome=yes is deliberately omitted: it makes /home inaccessible and
+# empty regardless of ReadWritePaths, which fights the carve-out below for
+# __DATA_DIR__ (which lives under /home/yunohost.app/__APP__) - confirmed
+# on a real install, where this combination made the daemon crash-loop on
+# PermissionError trying to create its own data directory. ProtectSystem=
+# strict already makes everything else read-only except ReadWritePaths.
 PrivateTmp=yes
 ProtectSystem=strict
-ProtectHome=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 RestrictNamespaces=yes
 RestrictRealtime=yes
