@@ -47,14 +47,15 @@ get__identities_summary() {
 	local summary
 	summary="$(_nostr_auth_admin list 2>&1)" \
 		|| summary="(could not read identities: $summary)"
-	local debug
-	debug="$(ynh_app_setting_get --key=debug_last_action 2>&1)"
+	local debug_b64 debug
+	debug_b64="$(ynh_app_setting_get --key=debug_last_action 2>&1)"
+	debug="$(printf '%s' "$debug_b64" | base64 -d 2>&1)"
 	cat <<EOF
 ask:
   en: |
 $(echo "$summary" | sed 's/^/    /')
 
-    DEBUG: $debug
+    DEBUG: $(echo "$debug" | sed 's/^/    /')
 EOF
 }
 
@@ -73,7 +74,8 @@ run__do_link() {
 
 	local output rc=0
 	output="$(_nostr_auth_admin link "$link_username" "$link_npub" 2>&1)" || rc=$?
-	ynh_app_setting_set --key=debug_last_action --value="link rc=$rc install_dir=[$install_dir] data_dir=[$data_dir] output=[$output]"
+	local debug_msg="link rc=$rc install_dir=[$install_dir] data_dir=[$data_dir] output=[$output]"
+	ynh_app_setting_set --key=debug_last_action --value="$(printf '%s' "$debug_msg" | base64 -w0)"
 	[ "$rc" -eq 0 ] || ynh_die "Could not link identity: $output"
 	_nostr_auth_fix_perms
 	ynh_print_info "$output"
