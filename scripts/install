@@ -25,6 +25,9 @@ ynh_script_progression "Adding system configurations related to $app..."
 if ! getent group nostr-auth-lookup >/dev/null; then
 	groupadd --system nostr-auth-lookup
 fi
+if id yunohost_mcp >/dev/null 2>&1; then
+	usermod --append --groups nostr-auth-lookup yunohost_mcp
+fi
 
 ynh_config_add_nginx
 
