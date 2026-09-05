@@ -67,18 +67,21 @@ run__do_link() {
 	[ -n "${link_username:-}" ] || ynh_die "Choose a YunoHost account to link"
 	[ -n "${link_npub:-}" ] || ynh_die "Enter the Nostr public key (npub or hex) to link"
 
-	_nostr_auth_admin link "$link_username" "$link_npub" \
-		|| ynh_die "Could not link identity - see the error above"
+	local output
+	output="$(_nostr_auth_admin link "$link_username" "$link_npub" 2>&1)" \
+		|| ynh_die "Could not link identity: $output"
 	_nostr_auth_fix_perms
-	ynh_print_info "Linked $link_username to $link_npub"
+	ynh_print_info "$output"
 }
 
 run__do_unlink() {
 	[ -n "${unlink_username:-}" ] || ynh_die "Choose a YunoHost account to unlink"
 
-	_nostr_auth_admin unlink "$unlink_username" \
-		|| ynh_die "Could not unlink identity - see the error above"
+	local output
+	output="$(_nostr_auth_admin unlink "$unlink_username" 2>&1)" \
+		|| ynh_die "Could not unlink identity: $output"
 	_nostr_auth_fix_perms
+	ynh_print_info "$output"
 }
 
 #=================================================
