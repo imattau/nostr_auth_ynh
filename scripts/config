@@ -13,6 +13,18 @@ ynh_abort_if_errors
 #=================================================
 
 install_dir=$(ynh_app_setting_get --key=install_dir)
+data_dir=$(ynh_app_setting_get --key=data_dir)
+
+# Unlike conf/systemd.service, nothing here sets NOSTR_AUTH_DATA_DIR - a
+# config-panel action's environment isn't the running service's. Confirmed
+# live: without this, admin_cli.py falls back to its default relative
+# "./data" path and writes/reads a completely different (and, from this
+# script's actual working directory, likely uncreated) SQLite file than
+# the one nostr_auth.service uses - the action reports success, but the
+# service never sees the change.
+_nostr_auth_admin() {
+	NOSTR_AUTH_DATA_DIR="$data_dir" "$install_dir/venv/bin/yunohost-nostr-auth-admin" "$@"
+}
 
 #=================================================
 # GETTERS
@@ -20,7 +32,7 @@ install_dir=$(ynh_app_setting_get --key=install_dir)
 
 get__identities_summary() {
 	local summary
-	summary="$("$install_dir/venv/bin/yunohost-nostr-auth-admin" list 2>&1)" \
+	summary="$(_nostr_auth_admin list 2>&1)" \
 		|| summary="(could not read identities: $summary)"
 	cat <<EOF
 ask:
@@ -42,7 +54,7 @@ run__do_link() {
 	[ -n "${link_username:-}" ] || ynh_die "Choose a YunoHost account to link"
 	[ -n "${link_npub:-}" ] || ynh_die "Enter the Nostr public key (npub or hex) to link"
 
-	"$install_dir/venv/bin/yunohost-nostr-auth-admin" link "$link_username" "$link_npub" \
+	_nostr_auth_admin link "$link_username" "$link_npub" \
 		|| ynh_die "Could not link identity - see the error above"
 	ynh_print_info "Linked $link_username to $link_npub"
 }
@@ -50,6 +62,6 @@ run__do_link() {
 run__do_unlink() {
 	[ -n "${unlink_username:-}" ] || ynh_die "Choose a YunoHost account to unlink"
 
-	"$install_dir/venv/bin/yunohost-nostr-auth-admin" unlink "$unlink_username" \
+	_nostr_auth_admin unlink "$unlink_username" \
 		|| ynh_die "Could not unlink identity - see the error above"
 }
