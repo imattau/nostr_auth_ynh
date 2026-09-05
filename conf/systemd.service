@@ -1,6 +1,7 @@
 [Unit]
 Description=Nostr Authentication: sign in to YunoHost with a linked Nostr identity
-After=network.target
+After=network.target __APP__-mint-session.service
+Wants=__APP__-mint-session.service
 
 [Service]
 Type=simple
@@ -17,22 +18,21 @@ WorkingDirectory=__INSTALL_DIR__/
 Environment=PATH=__INSTALL_DIR__/venv/bin:/usr/bin:/bin
 Environment=NOSTR_AUTH_DATA_DIR=__DATA_DIR__
 Environment=NOSTR_AUTH_PORTAL_API_BASE_URL=http://127.0.0.1:6788
-# The one thing this otherwise-unprivileged process needs a narrow escape
-# hatch for: minting a real YunoHost session requires the ynh-portal
-# system user's privileges (PHASE0_INVESTIGATION.md's Conclusions), which
-# it reaches via `sudo -n -u ynh-portal` to exactly this one helper binary
-# (see ../conf/sudoers). That's also why NoNewPrivileges=no is set
-# explicitly below (not just omitted): several of this unit's own other
-# hardening options - RestrictNamespaces=, SystemCallFilter=, and
-# LockPersonality= among them - each *imply* NoNewPrivileges=yes on their
-# own in systemd, regardless of whether it's written out. Confirmed on a
-# real install: even with the explicit NoNewPrivileges=yes line removed,
-# sudo still failed with "The 'no new privileges' flag is set" until this
-# was added. The rest of this unit's sandboxing is about constraining what
-# a compromised process could do *without* using that one sanctioned sudo
-# path, not about preventing sudo from working at all.
-Environment=NOSTR_AUTH_MINT_SESSION_HELPER=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth-mint-session
-Environment=NOSTR_AUTH_MINT_SESSION_USER=ynh-portal
+# Minting a real YunoHost session requires the ynh-portal system user's
+# privileges (PHASE0_INVESTIGATION.md's Conclusions). This process never
+# gains that privilege itself - it asks ../conf/nostr_auth-mint-session.service
+# (a separate, always-running ynh-portal-owned process) over this Unix
+# socket. A sudo-spawned-per-request helper was the original design here
+# and does NOT work on a (containerized) install where the container sets
+# the kernel's no_new_privs flag - confirmed live: "sudo: The 'no new
+# privileges' flag is set, which prevents sudo from running as root," and
+# no setting in *this* unit can override a restriction imposed at the
+# container level. See PHASE0_INVESTIGATION.md's "Privilege-drop redesign"
+# for the full story - this is why NoNewPrivileges is left at its systemd
+# default (effectively enabled) below rather than carved out: this process
+# has no legitimate reason to ever escalate privilege, unlike the old
+# sudo-based design.
+Environment=NOSTR_AUTH_MINT_SESSION_SOCKET=/run/nostr_auth-mint/__APP__.sock
 ExecStart=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth --host 127.0.0.1 --port __PORT__
 Restart=always
 RestartSec=5
@@ -43,7 +43,6 @@ RestartSec=5
 # on a real install, where this combination made the daemon crash-loop on
 # PermissionError trying to create its own data directory. ProtectSystem=
 # strict already makes everything else read-only except ReadWritePaths.
-NoNewPrivileges=no
 PrivateTmp=yes
 ProtectSystem=strict
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

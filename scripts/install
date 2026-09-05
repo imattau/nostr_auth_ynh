@@ -22,18 +22,26 @@ nostr_auth_install_venv
 #=================================================
 ynh_script_progression "Adding system configurations related to $app..."
 
-nostr_auth_install_sudoers
-
 ynh_config_add_nginx
 
+ynh_config_add_systemd --service="$app-mint-session" --template="nostr_auth-mint-session.service"
 ynh_config_add_systemd
 
+yunohost service add "$app-mint-session" --description="Nostr authentication: privileged session-minting helper"
 yunohost service add "$app" --description="Nostr authentication add-on for YunoHost"
 
 #=================================================
 # START APP
 #=================================================
-ynh_script_progression "Starting $app's systemd service..."
+ynh_script_progression "Starting $app's systemd services..."
+
+# Started first and separately: $app.service's own startup doesn't
+# actually depend on this being up yet (it only reaches it at request
+# time, not at startup), but starting the privileged half first makes for
+# a saner boot order regardless.
+ynh_systemctl --service="$app-mint-session" --action="start" \
+	--log_path="systemd" \
+	--wait_until="listening on"
 
 ynh_systemctl --service="$app" --action="start" \
 	--log_path="systemd" \

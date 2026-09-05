@@ -23,9 +23,12 @@ nostr_auth_install_venv
 #=================================================
 ynh_script_progression "Restoring system configurations related to $app..."
 
-nostr_auth_install_sudoers
-
 ynh_restore "/etc/nginx/conf.d/$domain.d/$app.conf"
+
+ynh_restore "/etc/systemd/system/$app-mint-session.service"
+systemctl enable "$app-mint-session.service" --quiet
+yunohost service add "$app-mint-session" --description="Nostr authentication: privileged session-minting helper"
+
 ynh_restore "/etc/systemd/system/$app.service"
 systemctl enable "$app.service" --quiet
 yunohost service add "$app" --description="Nostr authentication add-on for YunoHost"
@@ -33,7 +36,11 @@ yunohost service add "$app" --description="Nostr authentication add-on for YunoH
 #=================================================
 # START APP
 #=================================================
-ynh_script_progression "Starting $app's systemd service..."
+ynh_script_progression "Starting $app's systemd services..."
+
+ynh_systemctl --service="$app-mint-session" --action="start" \
+	--log_path="systemd" \
+	--wait_until="listening on"
 
 ynh_systemctl --service="$app" --action="start" \
 	--log_path="systemd" \

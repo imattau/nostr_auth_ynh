@@ -1,0 +1,50 @@
+[Unit]
+Description=Nostr Authentication: privileged session-minting helper for __APP__
+After=network.target slapd.service
+
+[Service]
+Type=simple
+User=ynh-portal
+Group=ynh-portal
+
+# This is the privileged half of __APP__'s session minting
+# (PHASE0_INVESTIGATION.md's "Privilege-drop redesign" in the upstream
+# repo): it runs as its own always-running service, started as ynh-portal
+# by systemd-as-root from the start, rather than being invoked on demand
+# by __APP__.service via sudo. That distinction matters on this kind of
+# (containerized) install: systemd starting a User=-scoped service is a
+# privilege *drop* by an already-privileged supervisor, not a *gain* by an
+# unprivileged process, so - unlike sudo - it isn't blocked by a
+# container's no_new_privs restriction. __APP__.service talks to this over
+# the Unix socket below; every connection's SO_PEERCRED is checked against
+# __APP__'s own uid before anything else happens (mint_session_server.py),
+# since the socket's file permissions alone can't cheaply restrict which
+# of two different system users may connect.
+RuntimeDirectory=nostr_auth-mint
+RuntimeDirectoryMode=0755
+ExecStart=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth-mint-session-server --socket-path /run/nostr_auth-mint/__APP__.sock --allowed-user __APP__
+Restart=always
+RestartSec=5
+
+# Conservative sandboxing: this process never needs to escalate privilege
+# further (unlike __APP__.service, it has no legitimate reason to reach
+# for sudo), so the usual full hardening set - including NoNewPrivileges,
+# left at its systemd default of enabled - applies without any carve-out.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallFilter=~@clock @debug @module @mount @obsolete @reboot @swap
+# Writes the session-touch-file YunoHost's own portal API and SSOwat both
+# check (PHASE0_INVESTIGATION.md). Reading
+# /etc/yunohost/.ssowat_cookie_secret needs no extra carve-out: it stays
+# readable (just not writable) under ProtectSystem=strict, and its own
+# file mode (400, owned ynh-portal:root) already permits exactly this
+# user to read it.
+ReadWritePaths=/var/cache/yunohost-portal/sessions
+
+[Install]
+WantedBy=multi-user.target

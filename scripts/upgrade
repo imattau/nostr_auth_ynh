@@ -22,16 +22,21 @@ nostr_auth_install_venv
 #=================================================
 ynh_script_progression "Upgrading system configurations related to $app..."
 
-nostr_auth_install_sudoers
-
 ynh_config_add_nginx
 
+ynh_config_add_systemd --service="$app-mint-session" --template="nostr_auth-mint-session.service"
 ynh_config_add_systemd
+
+yunohost service add "$app-mint-session" --description="Nostr authentication: privileged session-minting helper" 2>/dev/null || true
 
 #=================================================
 # START APP
 #=================================================
-ynh_script_progression "Starting $app's systemd service..."
+ynh_script_progression "Restarting $app's systemd services..."
+
+ynh_systemctl --service="$app-mint-session" --action="restart" \
+	--log_path="systemd" \
+	--wait_until="listening on"
 
 ynh_systemctl --service="$app" --action="restart" \
 	--log_path="systemd" \
