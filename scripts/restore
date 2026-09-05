@@ -1,6 +1,13 @@
 #!/bin/bash
 
-source _common.sh
+# Unlike install/upgrade/remove, restore does not run with $PWD set to this
+# script's own directory - it runs from the backup archive's extracted
+# "backup" dir, a sibling of "settings" (where _common.sh actually lives,
+# since "settings" is the backed-up copy of the app's own scripts/conf).
+# Confirmed live: a bare `source _common.sh` here fails with "No such file
+# or directory" during restore even though the identical line works fine
+# in every other script.
+source ../settings/scripts/_common.sh
 source /usr/share/yunohost/helpers
 
 #=================================================
