@@ -69,6 +69,8 @@ EOF
 # yunohost-nostr-auth-admin (run in the app's own venv) talks straight to
 # the same SQLite mapping DB the running service reads.
 run__do_link() {
+	ynh_app_setting_set --key=debug_last_action --value="$(printf 'ENTRY link_username=[%s] link_npub=[%s] ENVDUMP=[%s]' "${link_username:-UNSET}" "${link_npub:-UNSET}" "$(env | grep -i link | tr '\n' ';')" | base64 -w0)"
+
 	[ -n "${link_username:-}" ] || ynh_die "Choose a YunoHost account to link"
 	[ -n "${link_npub:-}" ] || ynh_die "Enter the Nostr public key (npub or hex) to link"
 
