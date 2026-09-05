@@ -31,12 +31,23 @@ nostr_auth_install_venv
 ynh_script_progression "Restoring system configurations related to $app..."
 
 ynh_restore "/etc/nginx/conf.d/$domain.d/$app.conf"
+# ynh_restore is a pure file-copy helper - unlike ynh_config_add_nginx, it
+# never reloads anything. Confirmed live: without this, the restored
+# location conf sits correctly on disk but nginx (already running from
+# before this app was removed) keeps serving its own default page for
+# every path under this domain until something reloads it.
+ynh_systemctl --service=nginx --action=reload
 
 ynh_restore "/etc/systemd/system/$app-mint-session.service"
+ynh_restore "/etc/systemd/system/$app.service"
+# ynh_config_add_systemd (install/upgrade) always follows a unit file
+# write with this - matching it here rather than relying on systemd
+# noticing the restored files on its own.
+systemctl daemon-reload
+
 systemctl enable "$app-mint-session.service" --quiet
 yunohost service add "$app-mint-session" --description="Nostr authentication: privileged session-minting helper"
 
-ynh_restore "/etc/systemd/system/$app.service"
 systemctl enable "$app.service" --quiet
 yunohost service add "$app" --description="Nostr authentication add-on for YunoHost"
 
