@@ -71,6 +71,10 @@ run__do_link() {
 		|| ynh_die "Could not link identity - see the error above"
 	_nostr_auth_fix_perms
 	ynh_print_info "Linked $link_username to $link_npub"
+
+	# TEMPORARY DIAGNOSTIC - remove once the live-verification loop confirms
+	# the link actually reaches nostr_auth.service's own view of the DB.
+	ynh_die "DEBUG data_dir=[$data_dir] ls=[$(ls -la "$data_dir" 2>&1)] list=[$(_nostr_auth_admin list 2>&1)]"
 }
 
 run__do_unlink() {
