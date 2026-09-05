@@ -1,0 +1,34 @@
+[Unit]
+Description=Nostr Authentication: private linked-identity lookup for __APP__
+After=network.target
+
+[Service]
+Type=simple
+User=__APP__
+Group=__APP__
+SupplementaryGroups=nostr-auth-lookup
+RuntimeDirectory=nostr_auth-lookup
+# 0755, not something narrower: this directory is owned by __APP__:__APP__
+# (systemd's RuntimeDirectory= always uses the unit's own User=/Group=),
+# which has no relation to the nostr-auth-lookup group consumer apps join.
+# A restrictive mode here would block those apps at directory traversal
+# before they ever reach the socket's own permissions - the real access
+# control is SO_PEERCRED plus the socket's own 0660/nostr-auth-lookup
+# ownership (identity_lookup_server.py), same reasoning as
+# nostr_auth-mint-session.service's identical RuntimeDirectoryMode=0755.
+RuntimeDirectoryMode=0755
+ExecStart=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth-identity-lookup-server --socket-path /run/nostr_auth-lookup/lookup.sock --group nostr-auth-lookup
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallFilter=~@clock @debug @module @mount @obsolete @reboot @swap
+ReadWritePaths=/run/nostr_auth-lookup
+
+[Install]
+WantedBy=multi-user.target

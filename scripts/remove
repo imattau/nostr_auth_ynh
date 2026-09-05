@@ -23,6 +23,7 @@ ynh_config_remove_fail2ban
 ynh_script_progression "Stopping and removing the systemd services..."
 
 ynh_config_remove_systemd
+ynh_config_remove_systemd "$app-identity-lookup"
 ynh_config_remove_systemd "$app-mint-session"
 
 if yunohost service status "$app" >/dev/null 2>&1; then
@@ -30,6 +31,20 @@ if yunohost service status "$app" >/dev/null 2>&1; then
 fi
 if yunohost service status "$app-mint-session" >/dev/null 2>&1; then
 	yunohost service remove "$app-mint-session"
+fi
+if yunohost service status "$app-identity-lookup" >/dev/null 2>&1; then
+	yunohost service remove "$app-identity-lookup"
+fi
+# Only delete the group if it has no other members left. It's shared with
+# other apps (e.g. yunohost-mcp) that join it themselves to be allowed to
+# query this app's identity-lookup socket - deleting it out from under a
+# still-installed consumer would break that app until it's reinstalled or
+# rejoins a newly-recreated group with a different GID. Note this app's own
+# identity-lookup.service is never itself a persistent member here: it only
+# gets the group via systemd's SupplementaryGroups=, which never touches
+# /etc/group.
+if getent group nostr-auth-lookup >/dev/null && [ -z "$(getent group nostr-auth-lookup | cut -d: -f4)" ]; then
+	groupdel nostr-auth-lookup || true
 fi
 
 #=================================================
