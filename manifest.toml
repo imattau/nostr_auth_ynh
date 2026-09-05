@@ -34,7 +34,7 @@ ram.runtime = "50M"
 [resources]
     [resources.sources.main]
     url = "https://github.com/imattau/yunohost-nostr-auth/archive/refs/tags/v0.1.0.tar.gz"
-    sha256 = "TODO_FILL_IN_ON_FIRST_TAGGED_RELEASE"
+    sha256 = "746d7ce673a41a852f115d91dcd09efce8be10cbbd240bcce0064d81112d72d5"
     autoupdate.strategy = "latest_github_tag"
 
     [resources.system_user]
@@ -47,10 +47,15 @@ ram.runtime = "50M"
     # upstream repo.
 
     [resources.permissions.main]
-    url = "/nostr-login"
-    # No SSOwat protection here: this is the unauthenticated entry point
-    # people visit *to* authenticate (PLAN.md Phase 6). It's the standalone
-    # page, not a normal SSO-protected app.
+    url = "/"
+    # Whole app, not just "/nostr-login": Phase 6's standalone login page
+    # doesn't exist yet - right now the app's only content *is* the JSON
+    # API (server.py's /challenge, /authenticate, /link, ...), all at root.
+    # Once Phase 6 adds an actual /nostr-login page this should narrow to
+    # cover only the unauthenticated entry points; everything else (linking
+    # requires an existing YunoHost session, checked in-app - see
+    # identity/linking.py) can stay open here since SSOwat isn't the layer
+    # doing that check.
     allowed = "visitors"
 
     [resources.ports.main]
