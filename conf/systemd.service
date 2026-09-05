@@ -16,11 +16,23 @@ Group=__APP__
 WorkingDirectory=__INSTALL_DIR__/
 Environment=PATH=__INSTALL_DIR__/venv/bin:/usr/bin:/bin
 Environment=NOSTR_AUTH_DATA_DIR=__DATA_DIR__
+Environment=NOSTR_AUTH_PORTAL_API_BASE_URL=http://127.0.0.1:6788
+# The one thing this otherwise-unprivileged process needs a narrow escape
+# hatch for: minting a real YunoHost session requires the ynh-portal
+# system user's privileges (PHASE0_INVESTIGATION.md's Conclusions), which
+# it reaches via `sudo -n -u ynh-portal` to exactly this one helper binary
+# (see ../conf/sudoers). This is also why NoNewPrivileges is NOT set below:
+# that flag would make the kernel silently refuse `sudo`'s privilege gain
+# regardless of what /etc/sudoers.d/__APP__ allows - so most of the other
+# ProtectSystem=strict-style sandboxing on this unit is intentionally about
+# constraining what a compromised process could do *without* using that one
+# sanctioned sudo path, not about preventing sudo from working at all.
+Environment=NOSTR_AUTH_MINT_SESSION_HELPER=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth-mint-session
+Environment=NOSTR_AUTH_MINT_SESSION_USER=ynh-portal
 ExecStart=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth --host 127.0.0.1 --port __PORT__
 Restart=always
 RestartSec=5
 
-NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=yes

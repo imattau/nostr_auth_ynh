@@ -22,6 +22,8 @@ nostr_auth_install_venv
 #=================================================
 ynh_script_progression "Adding system configurations related to $app..."
 
+nostr_auth_install_sudoers
+
 ynh_config_add_nginx
 
 ynh_config_add_systemd

@@ -4,6 +4,13 @@ source _common.sh
 source /usr/share/yunohost/helpers
 
 #=================================================
+# REMOVE SUDOERS RULE
+#=================================================
+ynh_script_progression "Removing the sudoers rule..."
+
+nostr_auth_remove_sudoers
+
+#=================================================
 # REMOVE SYSTEMD SERVICE
 #=================================================
 ynh_script_progression "Stopping and removing the systemd service..."

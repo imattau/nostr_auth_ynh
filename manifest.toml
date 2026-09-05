@@ -57,4 +57,12 @@ ram.runtime = "50M"
     default = 8766
 
     [resources.apt]
-    packages = "python3-venv, python3-dev, build-essential, libffi-dev, pkg-config"
+    # python3-ldap: the mint-session helper (runs as ynh-portal) needs it
+    # for the anonymous LDAP lookup in ldap_lookup.py - installed via apt,
+    # not pip, and reached through the venv's --system-site-packages flag
+    # (see scripts/_common.sh), the same way YunoHost's own moulinette
+    # dependencies are reached rather than duplicated in our own venv.
+    # sudo: required for the daemon to invoke the mint-session helper as
+    # ynh-portal (see conf/sudoers) - present on virtually all Debian
+    # installs already, declared explicitly rather than assumed.
+    packages = "python3-venv, python3-dev, python3-ldap, build-essential, libffi-dev, pkg-config, sudo"

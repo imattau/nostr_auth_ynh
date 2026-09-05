@@ -1,0 +1,12 @@
+# Lets __APP__ (the unprivileged daemon user) mint a YunoHost portal
+# session by invoking the helper below as ynh-portal - the only account
+# that can read /etc/yunohost/.ssowat_cookie_secret or write to
+# /var/cache/yunohost-portal/sessions/. See yunohost-nostr-auth's
+# PHASE0_INVESTIGATION.md (Conclusions) and ynh/permissions.py for why.
+#
+# No argument restriction beyond the binary itself: sudoers argument
+# globbing is fragile to rely on for security here anyway, and the two
+# arguments the daemon passes (a ynh_username it has already Nostr-verified
+# against its own pubkey mapping, and the request's Host header) are not
+# attacker-controlled in a way this rule could usefully constrain further.
+__APP__ ALL=(ynh-portal) NOPASSWD: __INSTALL_DIR__/venv/bin/yunohost-nostr-auth-mint-session

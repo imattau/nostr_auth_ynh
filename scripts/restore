@@ -23,6 +23,8 @@ nostr_auth_install_venv
 #=================================================
 ynh_script_progression "Restoring system configurations related to $app..."
 
+nostr_auth_install_sudoers
+
 ynh_restore "/etc/nginx/conf.d/$domain.d/$app.conf"
 ynh_restore "/etc/systemd/system/$app.service"
 systemctl enable "$app.service" --quiet
