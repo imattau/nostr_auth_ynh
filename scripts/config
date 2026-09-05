@@ -1,0 +1,55 @@
+#!/bin/bash
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+ynh_abort_if_errors
+
+#=================================================
+# RETRIEVE ARGUMENTS
+#=================================================
+
+install_dir=$(ynh_app_setting_get --key=install_dir)
+
+#=================================================
+# GETTERS
+#=================================================
+
+get__identities_summary() {
+	local summary
+	summary="$("$install_dir/venv/bin/yunohost-nostr-auth-admin" list 2>&1)" \
+		|| summary="(could not read identities: $summary)"
+	cat <<EOF
+ask:
+  en: |
+$(echo "$summary" | sed 's/^/    /')
+EOF
+}
+
+#=================================================
+# ACTIONS
+#=================================================
+
+# PLAN.md Phase 5/14: admin-provisioned linking - no live signature
+# required, unlike /nostr-account's self-service flow. Reaching this
+# config panel at all already means administering this YunoHost server;
+# yunohost-nostr-auth-admin (run in the app's own venv) talks straight to
+# the same SQLite mapping DB the running service reads.
+run__do_link() {
+	[ -n "${link_username:-}" ] || ynh_die "Choose a YunoHost account to link"
+	[ -n "${link_npub:-}" ] || ynh_die "Enter the Nostr public key (npub or hex) to link"
+
+	"$install_dir/venv/bin/yunohost-nostr-auth-admin" link "$link_username" "$link_npub" \
+		|| ynh_die "Could not link identity - see the error above"
+	ynh_print_info "Linked $link_username to $link_npub"
+}
+
+run__do_unlink() {
+	[ -n "${unlink_username:-}" ] || ynh_die "Choose a YunoHost account to unlink"
+
+	"$install_dir/venv/bin/yunohost-nostr-auth-admin" unlink "$unlink_username" \
+		|| ynh_die "Could not unlink identity - see the error above"
+}

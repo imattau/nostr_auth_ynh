@@ -1,0 +1,76 @@
+#:schema https://github.com/YunoHost/apps/raw/main/schemas/config_panel.v1.schema.json
+
+## Admin-provisioned identity linking straight from the webadmin, without
+## SSH - see scripts/config for the real logic (a thin wrapper around
+## yunohost-nostr-auth-admin, in the app's own venv). This is deliberately
+## a *different* trust model from the self-service /nostr-account flow:
+## no live signature is required here, since reaching this panel at all
+## already means administering this YunoHost server. Use it to provision
+## an account for an agent/bot using an npub it reports itself, or to
+## link/unlink on a human's behalf - the self-service flow (which does
+## prove the linker controls the key) remains the right choice whenever
+## the account holder can do it themselves.
+
+version = "1.0"
+
+[identities]
+name.en = "Nostr identities"
+name.fr = "Identités Nostr"
+services = []
+
+    [identities.overview]
+    name.en = "Currently linked identities"
+    name.fr = "Identités actuellement liées"
+
+        [identities.overview.identities_summary]
+        ask.en = "Linked identities"
+        ask.fr = "Identités liées"
+        type = "alert"
+        style = "info"
+        # Filled dynamically by get__identities_summary in scripts/config.
+
+    [identities.link]
+    name.en = "Link an identity (admin-provisioned)"
+    name.fr = "Lier une identité (provisionnée par l'administrateur)"
+    help.en = "Binds a Nostr public key to an existing YunoHost account without requiring a live signature from that key. Use this to provision an account for an agent/bot using an npub it reports itself, or to link on a human's behalf. The self-service flow at /nostr-account (which does require a live signature, proving the linker actually controls the key) remains the right choice whenever the account holder can do it themselves."
+    help.fr = "Lie une clé publique Nostr à un compte YunoHost existant sans exiger de signature en direct de cette clé. Utilisez ceci pour provisionner un compte pour un agent/bot à partir d'un npub qu'il indique lui-même, ou pour lier au nom d'un humain. Le flux libre-service sur /nostr-account (qui exige une signature en direct, prouvant que la personne qui lie contrôle réellement la clé) reste le bon choix chaque fois que le titulaire du compte peut le faire lui-même."
+
+        [identities.link.link_username]
+        ask.en = "YunoHost account"
+        ask.fr = "Compte YunoHost"
+        type = "user"
+        bind = "null"
+
+        [identities.link.link_npub]
+        ask.en = "Nostr public key (npub or hex)"
+        ask.fr = "Clé publique Nostr (npub ou hex)"
+        type = "string"
+        optional = true
+        bind = "null"
+        example = "npub1sn0wdenkukak0d9dfczzeacvhkrgz92ak56egt7vdgzn8pv2wfqqhrjdv9"
+        pattern.regexp = '^$|^npub1[a-z0-9]{20,}$|^[0-9a-fA-F]{64}$'
+        pattern.error = "Must be a valid npub1... key or a 64-character hex pubkey"
+
+        [identities.link.do_link]
+        ask.en = "Link identity"
+        ask.fr = "Lier l'identité"
+        type = "button"
+        style = "success"
+
+    [identities.unlink]
+    name.en = "Unlink an identity"
+    name.fr = "Délier une identité"
+    help.en = "Removes whatever Nostr identity is currently linked to this account, if any."
+    help.fr = "Supprime l'identité Nostr actuellement liée à ce compte, le cas échéant."
+
+        [identities.unlink.unlink_username]
+        ask.en = "YunoHost account"
+        ask.fr = "Compte YunoHost"
+        type = "user"
+        bind = "null"
+
+        [identities.unlink.do_unlink]
+        ask.en = "Unlink identity"
+        ask.fr = "Délier l'identité"
+        type = "button"
+        style = "danger"

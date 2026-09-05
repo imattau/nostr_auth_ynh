@@ -53,13 +53,29 @@ If you lose access to your linked Nostr key, password login still works:
 log in with your password, visit `/nostr-account`, and click **Replace
 identity** (or **Unlink**, then link a new one later).
 
-## CLI (planned)
+## Admin-provisioned linking (no live signature required)
+
+The webadmin's app page for nostr_auth has a **Config** tab with a
+**Nostr identities** panel: link/unlink any YunoHost account by pubkey
+directly, and see everything currently linked. Unlike the self-service
+`/nostr-account` flow, this does **not** require a live signature proving
+the linker controls the key - reaching this panel at all already means
+administering the server, so use it when the account holder can't do the
+signing themselves (most concretely: giving an agent/bot its own YunoHost
+account using an npub it reports itself, with no browser in the loop).
+Create the account normally first (`yunohost user create`, or the
+webadmin's Users page) and link its npub here afterwards.
+
+The same actions are reachable from the CLI/API:
 
 ```bash
-yunohost nostr-auth status
-yunohost nostr-auth users
-yunohost nostr-auth show <username>
-yunohost nostr-auth unlink <username>
+yunohost app action run nostr_auth identities.link.do_link \
+    --args="link_username=agentuser&link_npub=npub1..."
+yunohost app action run nostr_auth identities.unlink.do_unlink \
+    --args="unlink_username=agentuser"
 ```
 
-Not yet implemented - see PLAN.md Phase 14 in the core repo.
+See the core repo's PLAN.md Phase 5/14 and `docs/mcp-integration.md` for
+how this relates to (and stays deliberately separate from) a service like
+yunohost-mcp's own pubkey→role/scope model, for agents that only need API
+access and no real YunoHost account at all.
