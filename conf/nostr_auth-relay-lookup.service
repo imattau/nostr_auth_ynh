@@ -1,0 +1,50 @@
+[Unit]
+Description=Nostr Authentication: private relay-list lookup for __APP__
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__APP__
+Group=__APP__
+SupplementaryGroups=nostr-auth-lookup
+# Same reasoning as nostr_auth-identity-lookup.service's identical line:
+# MappingStore/RelayCache both read settings.data_dir, which defaults to
+# a relative "./data" (config.py) if unset - fatal under
+# ProtectSystem=strict with no WorkingDirectory= (cwd is "/", read-only).
+Environment=NOSTR_AUTH_DATA_DIR=__DATA_DIR__
+# Its own directory, deliberately not shared with
+# nostr_auth-identity-lookup.service's RuntimeDirectory=nostr_auth-lookup:
+# RuntimeDirectory= is tied to its owning service's lifecycle, so two
+# services sharing one would have either one's stop delete the directory
+# (and the other's socket) out from under it.
+RuntimeDirectory=nostr_auth-relay-lookup
+# 0755, not something narrower - same reasoning as
+# nostr_auth-identity-lookup.service's identical line: this directory is
+# owned by __APP__:__APP__, unrelated to the nostr-auth-lookup group
+# consumer apps join. The real access control is SO_PEERCRED plus the
+# socket's own 0660/nostr-auth-lookup ownership (relay_lookup_server.py).
+RuntimeDirectoryMode=0755
+ExecStart=__INSTALL_DIR__/venv/bin/yunohost-nostr-auth-relay-lookup-server --socket-path /run/nostr_auth-relay-lookup/relays.sock --group nostr-auth-lookup
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+# Unlike identity-lookup (pure local DB reads), this service makes
+# outbound connections to bootstrap relays to fetch a linked pubkey's own
+# NIP-65 event - AF_UNIX alone (identity-lookup's setting) would block
+# every one of those connections.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallFilter=~@clock @debug @module @mount @obsolete @reboot @swap
+# Same reasoning as nostr_auth-identity-lookup.service's identical line:
+# RelayCache.__init__ always calls data_dir.mkdir(parents=True,
+# exist_ok=True) before opening relays.db, so __DATA_DIR__ itself must be
+# writable, not just readable.
+ReadWritePaths=/run/nostr_auth-relay-lookup __DATA_DIR__
+
+[Install]
+WantedBy=multi-user.target

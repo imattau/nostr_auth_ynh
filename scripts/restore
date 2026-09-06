@@ -38,15 +38,17 @@ ynh_restore "/etc/nginx/conf.d/$domain.d/$app.conf"
 # every path under this domain until something reloads it.
 ynh_systemctl --service=nginx --action=reload
 
-# The identity-lookup socket's consumer-facing group - scripts/install
-# creates this the same way, idempotently, since it may already exist if
-# another app (e.g. yunohost-mcp) installed while this app was removed.
+# The identity-lookup and relay-lookup sockets' shared consumer-facing
+# group - scripts/install creates this the same way, idempotently, since
+# it may already exist if another app (e.g. yunohost-mcp) installed while
+# this app was removed.
 if ! getent group nostr-auth-lookup >/dev/null; then
 	groupadd --system nostr-auth-lookup
 fi
 
 ynh_restore "/etc/systemd/system/$app-mint-session.service"
 ynh_restore "/etc/systemd/system/$app-identity-lookup.service"
+ynh_restore "/etc/systemd/system/$app-relay-lookup.service"
 ynh_restore "/etc/systemd/system/$app.service"
 # ynh_config_add_systemd (install/upgrade) always follows a unit file
 # write with this - matching it here rather than relying on systemd
@@ -58,6 +60,9 @@ yunohost service add "$app-mint-session" --description="Nostr authentication: pr
 
 systemctl enable "$app-identity-lookup.service" --quiet
 yunohost service add "$app-identity-lookup" --description="Nostr authentication: private linked-identity lookup"
+
+systemctl enable "$app-relay-lookup.service" --quiet
+yunohost service add "$app-relay-lookup" --description="Nostr authentication: private relay-list lookup"
 
 systemctl enable "$app.service" --quiet
 yunohost service add "$app" --description="Nostr authentication add-on for YunoHost"
@@ -74,6 +79,10 @@ ynh_systemctl --service="$app-mint-session" --action="start" \
 ynh_systemctl --service="$app-identity-lookup" --action="start" \
 	--log_path="systemd" \
 	--wait_until="identity lookup listening"
+
+ynh_systemctl --service="$app-relay-lookup" --action="start" \
+	--log_path="systemd" \
+	--wait_until="relay lookup listening"
 
 ynh_systemctl --service="$app" --action="start" \
 	--log_path="systemd" \

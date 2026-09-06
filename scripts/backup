@@ -23,6 +23,7 @@ ynh_backup "/etc/nginx/conf.d/$domain.d/$app.conf"
 ynh_backup "/etc/systemd/system/$app.service"
 ynh_backup "/etc/systemd/system/$app-mint-session.service"
 ynh_backup "/etc/systemd/system/$app-identity-lookup.service"
+ynh_backup "/etc/systemd/system/$app-relay-lookup.service"
 
 #=================================================
 # END OF SCRIPT

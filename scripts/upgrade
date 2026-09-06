@@ -33,6 +33,7 @@ ynh_config_add_nginx
 
 ynh_config_add_systemd --service="$app-mint-session" --template="nostr_auth-mint-session.service"
 ynh_config_add_systemd --service="$app-identity-lookup" --template="nostr_auth-identity-lookup.service"
+ynh_config_add_systemd --service="$app-relay-lookup" --template="nostr_auth-relay-lookup.service"
 ynh_config_add_systemd
 
 # PLAN.md Phase 13: "rate limiting, brute-force throttling" - see
@@ -43,6 +44,7 @@ ynh_config_add_fail2ban \
 
 yunohost service add "$app-mint-session" --description="Nostr authentication: privileged session-minting helper" 2>/dev/null || true
 yunohost service add "$app-identity-lookup" --description="Nostr authentication: private linked-identity lookup" 2>/dev/null || true
+yunohost service add "$app-relay-lookup" --description="Nostr authentication: private relay-list lookup" 2>/dev/null || true
 
 #=================================================
 # START APP
@@ -56,6 +58,10 @@ ynh_systemctl --service="$app-mint-session" --action="restart" \
 ynh_systemctl --service="$app-identity-lookup" --action="restart" \
 	--log_path="systemd" \
 	--wait_until="identity lookup listening"
+
+ynh_systemctl --service="$app-relay-lookup" --action="restart" \
+	--log_path="systemd" \
+	--wait_until="relay lookup listening"
 
 ynh_systemctl --service="$app" --action="restart" \
 	--log_path="systemd" \
