@@ -18,6 +18,12 @@ ynh_script_progression "Restoring the app main directory..."
 ynh_restore "$install_dir"
 ynh_restore "$data_dir"
 
+ynh_app_setting_set_default --key=allow_nostr_login --value="true"
+ynh_app_setting_set_default --key=allow_identity_linking --value="true"
+ynh_app_setting_set_default --key=challenge_ttl_seconds --value="90"
+ynh_app_setting_set_default --key=clock_skew_seconds --value="60"
+nostr_auth_write_policy_settings
+
 #=================================================
 # RECREATE THE PYTHON VIRTUAL ENVIRONMENT
 #=================================================

@@ -28,6 +28,11 @@ ynh_script_progression "Upgrading system configurations related to $app..."
 # set fail outright otherwise). Only sets it if missing, so an admin's own
 # already-configured value is never touched.
 ynh_app_setting_set_default --key=relays_default --value=""
+ynh_app_setting_set_default --key=allow_nostr_login --value="true"
+ynh_app_setting_set_default --key=allow_identity_linking --value="true"
+ynh_app_setting_set_default --key=challenge_ttl_seconds --value="90"
+ynh_app_setting_set_default --key=clock_skew_seconds --value="60"
+nostr_auth_write_policy_settings
 
 if ! getent group nostr-auth-lookup >/dev/null; then
 	groupadd --system nostr-auth-lookup

@@ -33,6 +33,63 @@ services = []
         pattern.regexp = '^$|^wss?://[^,\s]+(,\s*wss?://[^,\s]+)*$'
         pattern.error = "Must be a comma-separated list of ws:// or wss:// relay URLs"
 
+[security]
+name.en = "Authentication policy"
+name.fr = "Politique d'authentification"
+services = ["nostr_auth"]
+help.en = "Pause either Nostr login or self-service identity linking without deleting existing identity mappings. Password login and administrator CLI/config-panel recovery remain available. Changes restart the authentication service."
+help.fr = "Mettez en pause la connexion Nostr ou la liaison d'identité libre-service sans supprimer les associations existantes. La connexion par mot de passe et la récupération via le CLI/panneau d'administration restent disponibles. Les changements redémarrent le service d'authentification."
+
+    [security.policy]
+    name.en = "Runtime switches"
+    name.fr = "Interrupteurs d'exécution"
+    services = ["nostr_auth"]
+
+        [security.policy.allow_nostr_login]
+        ask.en = "Allow Nostr login"
+        ask.fr = "Autoriser la connexion Nostr"
+        type = "select"
+        choices = ["true", "false"]
+        default = "true"
+        bind = "settings"
+        help.en = "When disabled, existing identities are retained but /challenge and /authenticate reject Nostr login attempts."
+        help.fr = "Désactivé, les identités existantes sont conservées mais /challenge et /authenticate refusent les tentatives de connexion Nostr."
+
+        [security.policy.allow_identity_linking]
+        ask.en = "Allow self-service identity linking"
+        ask.fr = "Autoriser la liaison d'identité libre-service"
+        type = "select"
+        choices = ["true", "false"]
+        default = "true"
+        bind = "settings"
+        help.en = "When disabled, users cannot link or add identities from /nostr-account. Existing identities can still log in, be renamed/revoked, or be removed."
+        help.fr = "Désactivé, les utilisateurs ne peuvent plus lier ou ajouter d'identités depuis /nostr-account. Les identités existantes peuvent toujours se connecter, être renommées/révoquées ou supprimées."
+
+    [security.timing]
+    name.en = "Challenge timing"
+    name.fr = "Durée des défis"
+    services = ["nostr_auth"]
+
+        [security.timing.challenge_ttl_seconds]
+        ask.en = "Challenge lifetime"
+        ask.fr = "Durée de vie du défi"
+        type = "select"
+        choices = ["30", "60", "90", "120"]
+        default = "90"
+        bind = "settings"
+        help.en = "How long a login or linking challenge remains valid. Shorter is safer; longer helps slow or remote signers."
+        help.fr = "Durée de validité d'un défi de connexion ou de liaison. Une durée plus courte est plus sûre ; une durée plus longue aide les signataires lents ou distants."
+
+        [security.timing.clock_skew_seconds]
+        ask.en = "Clock skew tolerance"
+        ask.fr = "Tolérance de décalage d'horloge"
+        type = "select"
+        choices = ["0", "30", "60", "120", "300"]
+        default = "60"
+        bind = "settings"
+        help.en = "Extra tolerance for a signed event's timestamp around the challenge window. Keep this low unless clients have unreliable clocks."
+        help.fr = "Tolérance supplémentaire pour l'horodatage d'un événement signé autour de la fenêtre du défi. Gardez-la faible, sauf si les clients ont des horloges peu fiables."
+
 [identities]
 name.en = "Nostr identities"
 name.fr = "Identités Nostr"
@@ -71,9 +128,139 @@ services = []
         pattern.regexp = '^$|^npub1[a-z0-9]{20,}$|^[0-9a-fA-F]{64}$'
         pattern.error = "Must be a valid npub1... key or a 64-character hex pubkey"
 
+        [identities.link.link_signer_type]
+        ask.en = "Signer type"
+        ask.fr = "Type de signataire"
+        type = "select"
+        choices = ["unknown", "nip07", "nip46", "passkey"]
+        default = "unknown"
+        bind = "null"
+
+        [identities.link.link_label]
+        ask.en = "Label (optional)"
+        ask.fr = "Libellé (facultatif)"
+        type = "string"
+        optional = true
+        bind = "null"
+        example = "Laptop passkey"
+        pattern.regexp = '^$|^.{1,120}$'
+        pattern.error = "Use at most 120 characters"
+
         [identities.link.do_link]
         ask.en = "Link identity"
         ask.fr = "Lier l'identité"
+        type = "button"
+        style = "success"
+
+    [identities.add]
+    name.en = "Add another identity"
+    name.fr = "Ajouter une autre identité"
+    help.en = "Adds a Nostr identity without replacing the account's existing identities. This is an administrative operation and does not require a live signature. Use the identity ID in the Revoke or Rename actions below to manage a specific entry."
+    help.fr = "Ajoute une identité Nostr sans remplacer les identités existantes du compte. Cette opération d'administration n'exige pas de signature en direct. Utilisez l'identifiant de l'identité dans les actions Révoquer ou Renommer ci-dessous pour gérer une entrée précise."
+
+        [identities.add.add_username]
+        ask.en = "YunoHost account"
+        ask.fr = "Compte YunoHost"
+        type = "user"
+        bind = "null"
+
+        [identities.add.add_npub]
+        ask.en = "Nostr public key (npub or hex)"
+        ask.fr = "Clé publique Nostr (npub ou hex)"
+        type = "string"
+        optional = true
+        bind = "null"
+        example = "npub1sn0wdenkukak0d9dfczzeacvhkrgz92ak56egt7vdgzn8pv2wfqqhrjdv9"
+        pattern.regexp = '^$|^npub1[a-z0-9]{20,}$|^[0-9a-fA-F]{64}$'
+        pattern.error = "Must be a valid npub1... key or a 64-character hex pubkey"
+
+        [identities.add.add_signer_type]
+        ask.en = "Signer type"
+        ask.fr = "Type de signataire"
+        type = "select"
+        choices = ["unknown", "nip07", "nip46", "passkey"]
+        default = "unknown"
+        bind = "null"
+
+        [identities.add.add_label]
+        ask.en = "Label (optional)"
+        ask.fr = "Libellé (facultatif)"
+        type = "string"
+        optional = true
+        bind = "null"
+        example = "Phone passkey"
+        pattern.regexp = '^$|^.{1,120}$'
+        pattern.error = "Use at most 120 characters"
+
+        [identities.add.do_add]
+        ask.en = "Add identity"
+        ask.fr = "Ajouter l'identité"
+        type = "button"
+        style = "success"
+
+    [identities.revoke]
+    name.en = "Revoke one identity"
+    name.fr = "Révoquer une identité"
+    help.en = "Disables one identity while retaining its audit record. Enter the numeric identity ID shown in the overview; revoking the last active identity prevents Nostr login but does not affect password login."
+    help.fr = "Désactive une identité tout en conservant sa trace d'audit. Saisissez l'identifiant numérique affiché dans le résumé ; révoquer la dernière identité active empêche la connexion Nostr, sans affecter la connexion par mot de passe."
+
+        [identities.revoke.revoke_username]
+        ask.en = "YunoHost account"
+        ask.fr = "Compte YunoHost"
+        type = "user"
+        bind = "null"
+
+        [identities.revoke.revoke_identity_id]
+        ask.en = "Identity ID"
+        ask.fr = "Identifiant de l'identité"
+        type = "string"
+        optional = true
+        bind = "null"
+        example = "12"
+        pattern.regexp = '^$|^[1-9][0-9]*$'
+        pattern.error = "Must be a positive numeric identity ID"
+
+        [identities.revoke.do_revoke]
+        ask.en = "Revoke identity"
+        ask.fr = "Révoquer l'identité"
+        type = "button"
+        style = "danger"
+
+    [identities.rename]
+    name.en = "Rename one identity"
+    name.fr = "Renommer une identité"
+    help.en = "Changes the display label of one active identity. Enter the numeric identity ID shown in the overview."
+    help.fr = "Modifie le libellé d'une identité active. Saisissez l'identifiant numérique affiché dans le résumé."
+
+        [identities.rename.rename_username]
+        ask.en = "YunoHost account"
+        ask.fr = "Compte YunoHost"
+        type = "user"
+        bind = "null"
+
+        [identities.rename.rename_identity_id]
+        ask.en = "Identity ID"
+        ask.fr = "Identifiant de l'identité"
+        type = "string"
+        optional = true
+        bind = "null"
+        example = "12"
+        pattern.regexp = '^$|^[1-9][0-9]*$'
+        pattern.error = "Must be a positive numeric identity ID"
+
+        [identities.rename.rename_label]
+        ask.en = "New label"
+        ask.fr = "Nouveau libellé"
+        type = "string"
+        optional = true
+        bind = "null"
+        example = "Main laptop"
+        pattern.regexp = '^$|^.{1,120}$'
+        pattern.error = "Use 1 to 120 characters"
+
+        [identities.rename.do_rename]
+        ask.en = "Rename identity"
+        ask.fr = "Renommer l'identité"
         type = "button"
         style = "success"
 

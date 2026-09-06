@@ -68,8 +68,23 @@ run__do_link() {
 	[ -n "${link_npub:-}" ] || ynh_die "Enter the Nostr public key (npub or hex) to link"
 
 	local output rc=0
-	output="$(_nostr_auth_admin link "$link_username" "$link_npub" 2>&1)" || rc=$?
+	local -a args=(link "$link_username" "$link_npub" --signer-type "${link_signer_type:-unknown}")
+	[ -n "${link_label:-}" ] && args+=(--label "$link_label")
+	output="$(_nostr_auth_admin "${args[@]}" 2>&1)" || rc=$?
 	[ "$rc" -eq 0 ] || ynh_die "Could not link identity: $output"
+	_nostr_auth_fix_perms
+	ynh_print_info "$output"
+}
+
+run__do_add() {
+	[ -n "${add_username:-}" ] || ynh_die "Choose a YunoHost account to add an identity to"
+	[ -n "${add_npub:-}" ] || ynh_die "Enter the Nostr public key (npub or hex) to add"
+
+	local output rc=0
+	local -a args=(link "$add_username" "$add_npub" --add --signer-type "${add_signer_type:-unknown}")
+	[ -n "${add_label:-}" ] && args+=(--label "$add_label")
+	output="$(_nostr_auth_admin "${args[@]}" 2>&1)" || rc=$?
+	[ "$rc" -eq 0 ] || ynh_die "Could not add identity: $output"
 	_nostr_auth_fix_perms
 	ynh_print_info "$output"
 }
@@ -82,6 +97,61 @@ run__do_unlink() {
 		|| ynh_die "Could not unlink identity: $output"
 	_nostr_auth_fix_perms
 	ynh_print_info "$output"
+}
+
+run__do_revoke() {
+	[ -n "${revoke_username:-}" ] || ynh_die "Choose a YunoHost account to revoke an identity from"
+	[ -n "${revoke_identity_id:-}" ] || ynh_die "Enter the numeric identity ID to revoke"
+
+	local output rc=0
+	output="$(_nostr_auth_admin revoke "$revoke_username" "$revoke_identity_id" 2>&1)" || rc=$?
+	[ "$rc" -eq 0 ] || ynh_die "Could not revoke identity: $output"
+	_nostr_auth_fix_perms
+	ynh_print_info "$output"
+}
+
+run__do_rename() {
+	[ -n "${rename_username:-}" ] || ynh_die "Choose a YunoHost account to rename an identity for"
+	[ -n "${rename_identity_id:-}" ] || ynh_die "Enter the numeric identity ID to rename"
+	[ -n "${rename_label:-}" ] || ynh_die "Enter a new identity label"
+
+	local output rc=0
+	output="$(_nostr_auth_admin rename "$rename_username" "$rename_identity_id" "$rename_label" 2>&1)" || rc=$?
+	[ "$rc" -eq 0 ] || ynh_die "Could not rename identity: $output"
+	_nostr_auth_fix_perms
+	ynh_print_info "$output"
+}
+
+set__allow_nostr_login() {
+	ynh_app_setting_set --key=allow_nostr_login --value="$allow_nostr_login"
+	nostr_auth_write_policy_settings
+	ynh_systemctl --service="$app" --action="restart" \
+		--log_path="systemd" \
+		--wait_until="Uvicorn running on"
+}
+
+set__allow_identity_linking() {
+	ynh_app_setting_set --key=allow_identity_linking --value="$allow_identity_linking"
+	nostr_auth_write_policy_settings
+	ynh_systemctl --service="$app" --action="restart" \
+		--log_path="systemd" \
+		--wait_until="Uvicorn running on"
+}
+
+set__challenge_ttl_seconds() {
+	ynh_app_setting_set --key=challenge_ttl_seconds --value="$challenge_ttl_seconds"
+	nostr_auth_write_policy_settings
+	ynh_systemctl --service="$app" --action="restart" \
+		--log_path="systemd" \
+		--wait_until="Uvicorn running on"
+}
+
+set__clock_skew_seconds() {
+	ynh_app_setting_set --key=clock_skew_seconds --value="$clock_skew_seconds"
+	nostr_auth_write_policy_settings
+	ynh_systemctl --service="$app" --action="restart" \
+		--log_path="systemd" \
+		--wait_until="Uvicorn running on"
 }
 
 #=================================================

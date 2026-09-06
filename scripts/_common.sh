@@ -23,6 +23,33 @@ nostr_auth_install_venv() {
 	ynh_hide_warnings "$install_dir/venv/bin/pip" install "$install_dir"
 }
 
+# Config-panel security switches are persisted in the app's data directory
+# as a systemd EnvironmentFile. Keeping this alongside the SQLite data means
+# the policy survives upgrades/restores and takes effect only after the
+# service restart performed by the setters in scripts/config.
+nostr_auth_write_policy_settings() {
+	local allow_login allow_linking challenge_ttl clock_skew
+	allow_login="$(ynh_app_setting_get --key=allow_nostr_login)"
+	allow_linking="$(ynh_app_setting_get --key=allow_identity_linking)"
+	challenge_ttl="$(ynh_app_setting_get --key=challenge_ttl_seconds)"
+	clock_skew="$(ynh_app_setting_get --key=clock_skew_seconds)"
+	[ "$allow_login" = "false" ] || allow_login="true"
+	[ "$allow_linking" = "false" ] || allow_linking="true"
+	case "$challenge_ttl" in
+		30|60|90|120) ;;
+		*) challenge_ttl="90" ;;
+	esac
+	case "$clock_skew" in
+		0|30|60|120|300) ;;
+		*) clock_skew="60" ;;
+	esac
+
+	printf 'NOSTR_AUTH_ALLOW_NOSTR_LOGIN=%s\nNOSTR_AUTH_ALLOW_IDENTITY_LINKING=%s\nNOSTR_AUTH_CHALLENGE_TTL_SECONDS=%s\nNOSTR_AUTH_CLOCK_SKEW_SECONDS=%s\n' \
+		"$allow_login" "$allow_linking" "$challenge_ttl" "$clock_skew" > "$data_dir/settings.env"
+	chown "$app:$app" "$data_dir/settings.env"
+	chmod 640 "$data_dir/settings.env"
+}
+
 # Installs the reapply-portal-patch.sh helper and its cron job (PLAN.md
 # Phase 9), then runs the helper once with --force so the currently
 # packaged version of the injected snippet takes effect immediately rather

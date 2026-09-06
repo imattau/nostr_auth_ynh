@@ -1,8 +1,10 @@
 # nostr_auth_ynh
 
 YunoHost packaging for [`yunohost-nostr-auth`](https://github.com/imattau/yunohost-nostr-auth):
-lets an existing YunoHost user sign in with a linked Nostr identity (NIP-07
-first), without replacing password login.
+lets an existing YunoHost user sign in with one or more linked Nostr
+identities (NIP-07, NIP-46, or passkey), without replacing password login.
+The admin Config panel can independently pause Nostr login or self-service
+identity linking without deleting existing mappings.
 
 This repo is packaging only - install/remove/upgrade/backup/restore scripts,
 Nginx and systemd config, and YunoHost permissions. The service itself and

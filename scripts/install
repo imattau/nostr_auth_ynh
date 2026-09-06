@@ -30,6 +30,11 @@ ynh_script_progression "Adding system configurations related to $app..."
 # nostr_blog/armada's own resolution chains: an empty shared default is
 # just "nothing to contribute," never an error).
 ynh_app_setting_set --key=relays_default --value=""
+ynh_app_setting_set --key=allow_nostr_login --value="true"
+ynh_app_setting_set --key=allow_identity_linking --value="true"
+ynh_app_setting_set --key=challenge_ttl_seconds --value="90"
+ynh_app_setting_set --key=clock_skew_seconds --value="60"
+nostr_auth_write_policy_settings
 
 if ! getent group nostr-auth-lookup >/dev/null; then
 	groupadd --system nostr-auth-lookup

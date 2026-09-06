@@ -5,7 +5,7 @@
 1. Log in to YunoHost normally with your password.
 2. Visit `https://<domain>/nostr-account` and click **Link identity**
    (requires a NIP-07 browser extension, e.g. Alby or nos2x), or use one
-   of the alternatives below - see the core repo's PLAN.md Phase 5 for
+   of the alternatives below - see the core repo's PLAN.md Phase 5/11 for
    how this is verified.
 3. Visit `https://<domain>/nostr-login` afterwards to sign in with Nostr.
 
@@ -23,13 +23,23 @@ Expand **Use a remote signer instead (NIP-46)** to paste a `bunker://`
 link or scan a `nostrconnect://` QR code from a signer app (e.g. Amber,
 nsec.app) instead of using a browser extension.
 
+### Passkeys
+
+Expand **Use a passkey on this device** to create or unlock a passkey-backed
+Nostr identity. Where the browser supports WebAuthn PRF, the private key is
+encrypted locally and unlocked only after biometric or security-key
+verification; it is never sent to the server. A generated key can be imported
+into the passkey vault, and an offline recovery `nsec` can be exported and
+restored on another device. Treat that recovery key like a password: anyone
+who has it can control the Nostr identity.
+
 ## Managing saved signers
 
 `/nostr-account` shows a **Saved on this device** panel listing whichever
-NIP-46 bunker session and/or locally-generated key this browser currently
-has stored, each with its own **Forget** button - use it to clear a saved
-signer without unlinking the identity itself. Unlinking always clears
-both.
+NIP-46 bunker session, locally-generated key, and/or passkey identity this
+browser currently has stored, each with its own **Forget** button - use it to
+clear a saved signer without unlinking the identity itself. Unlinking clears
+the NIP-46/local-key conveniences; passkey storage can be forgotten separately.
 
 ## Using your identity outside YunoHost (NIP-05)
 
@@ -47,6 +57,20 @@ Failed login/link/unlink attempts are logged (with the requesting IP) to
 alongside the app - repeated failures from the same IP get banned the
 same way YunoHost's own portal login does.
 
+## Runtime policy switches
+
+The Config tab's **Authentication policy** panel can independently pause
+Nostr login or self-service identity linking. Disabling either switch keeps
+the existing SQLite mappings intact. Password login remains available, and
+administrators can still use the CLI/config panel to provision, rename,
+revoke, or unlink identities. Re-enabling a switch restarts the service and
+makes the corresponding flow available again.
+
+The same panel also tunes challenge timing: challenge lifetime can be set from
+30 to 120 seconds, and timestamp clock-skew tolerance from 0 to 300 seconds.
+Keep both values low unless remote signers or poorly synchronized client
+clocks require extra time.
+
 ## Recovery
 
 If you lose access to your linked Nostr key, password login still works:
@@ -56,8 +80,9 @@ identity** (or **Unlink**, then link a new one later).
 ## Admin-provisioned linking (no live signature required)
 
 The webadmin's app page for nostr_auth has a **Config** tab with a
-**Nostr identities** panel: link/unlink any YunoHost account by pubkey
-directly, and see everything currently linked. Unlike the self-service
+**Nostr identities** panel: replace, add, rename, revoke, or unlink identities
+for any YunoHost account by pubkey/identity ID directly, and see everything
+currently linked. Unlike the self-service
 `/nostr-account` flow, this does **not** require a live signature proving
 the linker controls the key - reaching this panel at all already means
 administering the server, so use it when the account holder can't do the
@@ -70,10 +95,20 @@ The same actions are reachable from the CLI/API:
 
 ```bash
 yunohost app action run nostr_auth identities.link.do_link \
-    --args="link_username=agentuser&link_npub=npub1..."
+    --args="link_username=agentuser&link_npub=npub1...&link_signer_type=passkey&link_label=Agent%20passkey"
+yunohost app action run nostr_auth identities.add.do_add \
+    --args="add_username=agentuser&add_npub=npub1...&add_signer_type=nip46&add_label=Phone%20bunker"
+yunohost app action run nostr_auth identities.rename.do_rename \
+    --args="rename_username=agentuser&rename_identity_id=12&rename_label=Main%20laptop"
+yunohost app action run nostr_auth identities.revoke.do_revoke \
+    --args="revoke_username=agentuser&revoke_identity_id=12"
 yunohost app action run nostr_auth identities.unlink.do_unlink \
     --args="unlink_username=agentuser"
 ```
+
+`identities.link.do_link` keeps its historical replace behavior: it removes
+the account's previous identities before linking the supplied one. Use
+`identities.add.do_add` when the account should retain existing devices.
 
 See the core repo's PLAN.md Phase 5/14 and `docs/mcp-integration.md` for
 how this relates to (and stays deliberately separate from) a service like

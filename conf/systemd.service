@@ -17,6 +17,7 @@ Group=__APP__
 WorkingDirectory=__INSTALL_DIR__/
 Environment=PATH=__INSTALL_DIR__/venv/bin:/usr/bin:/bin
 Environment=NOSTR_AUTH_DATA_DIR=__DATA_DIR__
+EnvironmentFile=-__DATA_DIR__/settings.env
 Environment=NOSTR_AUTH_PORTAL_API_BASE_URL=http://127.0.0.1:6788
 # Minting a real YunoHost session requires the ynh-portal system user's
 # privileges (PHASE0_INVESTIGATION.md's Conclusions). This process never
