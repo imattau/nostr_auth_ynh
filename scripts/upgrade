@@ -22,6 +22,13 @@ nostr_auth_install_venv
 #=================================================
 ynh_script_progression "Upgrading system configurations related to $app..."
 
+# Apps upgraded from before relays_default existed won't have it set -
+# config_panel.toml's own use of it is bind="settings", which YunoHost's
+# config panel machinery requires to already have a value (app_config_get/
+# set fail outright otherwise). Only sets it if missing, so an admin's own
+# already-configured value is never touched.
+ynh_app_setting_set_default --key=relays_default --value=""
+
 if ! getent group nostr-auth-lookup >/dev/null; then
 	groupadd --system nostr-auth-lookup
 fi

@@ -22,6 +22,15 @@ nostr_auth_install_venv
 #=================================================
 ynh_script_progression "Adding system configurations related to $app..."
 
+# config_panel.toml's relays_default is bind="settings" - YunoHost's own
+# config panel machinery requires every such question to already have a
+# value from install/upgrade (app_config_get/set fail outright otherwise:
+# "should be initialized with a value during install or upgrade"). Empty
+# is a valid, intentional value here (see _widen_with_caller_relays and
+# nostr_blog/armada's own resolution chains: an empty shared default is
+# just "nothing to contribute," never an error).
+ynh_app_setting_set --key=relays_default --value=""
+
 if ! getent group nostr-auth-lookup >/dev/null; then
 	groupadd --system nostr-auth-lookup
 fi
