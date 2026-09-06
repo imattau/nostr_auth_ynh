@@ -79,14 +79,17 @@ identity** (or **Unlink**, then link a new one later).
 
 ## Admin dashboard
 
-Visit `https://<domain>/nostr-admin` while logged in as a YunoHost
-administrator for a dedicated dashboard: every linked identity across every
-account, searchable/filterable, with link/rename/revoke/unlink actions - a
+Administrators get a second tile on their YunoHost portal - **Nostr
+Identities (Admin)** - pointing straight at `https://<domain>/nostr-admin`:
+a dedicated dashboard listing every linked identity across every account,
+searchable/filterable, with link/rename/revoke/unlink actions. It's a
 faster alternative to the config-panel's numeric-ID form below for anyone
-managing more than a couple of identities. Access is checked in-app (your
-browser session must carry YunoHost's `admins` group), not through a
-separate login, so anyone who can already administer this server can use it
-immediately.
+managing more than a couple of identities. This tile and its `/nostr-admin`
+path are restricted to the `admins` group at the SSOwat level (a real,
+separate permission from the app's main `visitors` one), and the app
+double-checks the same group membership itself for every request, so
+visiting the URL directly is equally protected for anyone not already a
+server administrator.
 
 ## Admin-provisioned linking (no live signature required)
 

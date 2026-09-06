@@ -7,7 +7,7 @@ name = "Nostr Authentication"
 description.en = "Sign in to your YunoHost account with linked Nostr identities (NIP-07, NIP-46, or passkey), alongside your existing password"
 description.fr = "Connectez-vous à votre compte YunoHost avec des identités Nostr liées (NIP-07, NIP-46 ou passkey), en complément de votre mot de passe"
 
-version = "0.9.1~ynh1"
+version = "0.9.2~ynh1"
 
 maintainers = []
 
@@ -33,8 +33,8 @@ ram.runtime = "50M"
 
 [resources]
     [resources.sources.main]
-    url = "https://github.com/imattau/yunohost-nostr-auth/archive/refs/tags/v0.9.1.tar.gz"
-    sha256 = "78699834501a92ec18772051a5d2cb046889b127812b041638ba5c12be409e04"
+    url = "https://github.com/imattau/yunohost-nostr-auth/archive/refs/tags/v0.9.2.tar.gz"
+    sha256 = "eab2ffdf5893f367fc816ac07775a1fdabe2d45e230ec797809270ed6203e553"
     autoupdate.strategy = "latest_github_tag"
 
     [resources.system_user]
@@ -65,6 +65,24 @@ ram.runtime = "50M"
     # identity/linking.py, which checks the forwarded YunoHost cookie
     # itself), not via SSOwat permissions.
     allowed = "visitors"
+
+    [resources.permissions.admin]
+    # A narrower, admins-only carve-out of `main` (YunoHost resolves the
+    # more specific URL first) for the cross-user identity dashboard - see
+    # this app's own PLAN.md Phase 14 and server.py's admin_page /
+    # /nostr-admin/api/* routes, which already re-check the "admins" group
+    # themselves via yunohost-portal-api's /me. This SSOwat-level permission
+    # is defense in depth on top of that in-app check, and gives admins
+    # their own portal tile straight to the dashboard instead of the
+    # sign-in page `main`'s tile leads to.
+    url = "/nostr-admin"
+    # /nostr-admin/api/* is a subpath of this url, so it's covered by the
+    # same prefix match already - the same way `main`'s "/" already covers
+    # every other route in this app (/nostr-login, /identities, ...).
+    allowed = "admins"
+    show_tile = true
+    label = "Nostr Identities (Admin)"
+    protected = true
 
     [resources.ports.main]
     default = 8766
