@@ -13,6 +13,26 @@
 
 version = "1.0"
 
+[relays]
+name.en = "Default relays"
+name.fr = "Relais par défaut"
+services = []
+
+    [relays.defaults]
+    name.en = "Shared relay default"
+    name.fr = "Relais par défaut partagé"
+    help.en = "A server-wide starting point for other Nostr apps' own relay settings (nostr-blog, Armada, ...) - each app still keeps its own setting and an explicit value there always wins; this only fills in when an app is left at its own default. Not used by nostr_auth itself. Changing this does not retroactively rebuild apps already installed - it only takes effect on their next install or upgrade."
+    help.fr = "Un point de départ commun au serveur pour les propres réglages de relais des autres applications Nostr (nostr-blog, Armada, ...) - chaque application conserve son propre réglage et une valeur explicite y prévaut toujours ; ceci ne s'applique que lorsqu'une application est laissée à son réglage par défaut. Non utilisé par nostr_auth lui-même. Ce changement ne reconstruit pas rétroactivement les applications déjà installées - il ne prend effet qu'à leur prochaine installation ou mise à jour."
+
+        [relays.defaults.relays_default]
+        ask.en = "Default relays (comma-separated)"
+        ask.fr = "Relais par défaut (séparés par des virgules)"
+        type = "string"
+        optional = true
+        bind = "settings"
+        pattern.regexp = '^$|^wss?://[^,\s]+(,\s*wss?://[^,\s]+)*$'
+        pattern.error = "Must be a comma-separated list of ws:// or wss:// relay URLs"
+
 [identities]
 name.en = "Nostr identities"
 name.fr = "Identités Nostr"
