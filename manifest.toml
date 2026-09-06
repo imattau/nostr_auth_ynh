@@ -7,7 +7,7 @@ name = "Nostr Authentication"
 description.en = "Sign in to your YunoHost account with linked Nostr identities (NIP-07, NIP-46, or passkey), alongside your existing password"
 description.fr = "Connectez-vous à votre compte YunoHost avec des identités Nostr liées (NIP-07, NIP-46 ou passkey), en complément de votre mot de passe"
 
-version = "0.9.0~ynh1"
+version = "0.9.1~ynh1"
 
 maintainers = []
 
@@ -33,8 +33,8 @@ ram.runtime = "50M"
 
 [resources]
     [resources.sources.main]
-    url = "https://github.com/imattau/yunohost-nostr-auth/archive/refs/tags/v0.9.0.tar.gz"
-    sha256 = "f1b74a33c31121a6eb90251078d32e27aaf469e90d1e471d06a959108d3a33d0"
+    url = "https://github.com/imattau/yunohost-nostr-auth/archive/refs/tags/v0.9.1.tar.gz"
+    sha256 = "78699834501a92ec18772051a5d2cb046889b127812b041638ba5c12be409e04"
     autoupdate.strategy = "latest_github_tag"
 
     [resources.system_user]

@@ -77,6 +77,17 @@ If you lose access to your linked Nostr key, password login still works:
 log in with your password, visit `/nostr-account`, and click **Replace
 identity** (or **Unlink**, then link a new one later).
 
+## Admin dashboard
+
+Visit `https://<domain>/nostr-admin` while logged in as a YunoHost
+administrator for a dedicated dashboard: every linked identity across every
+account, searchable/filterable, with link/rename/revoke/unlink actions - a
+faster alternative to the config-panel's numeric-ID form below for anyone
+managing more than a couple of identities. Access is checked in-app (your
+browser session must carry YunoHost's `admins` group), not through a
+separate login, so anyone who can already administer this server can use it
+immediately.
+
 ## Admin-provisioned linking (no live signature required)
 
 The webadmin's app page for nostr_auth has a **Config** tab with a
